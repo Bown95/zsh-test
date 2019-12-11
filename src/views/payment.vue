@@ -2,7 +2,7 @@
   <div class="payment">
      
       <header class="header_xwx">
-          <van-icon @click="$router.push('/notes')" class="icon_ziti" name="arrow-left" />  在线缴费  
+          <van-icon @click="goto" class="icon_ziti" name="arrow-left" />  在线缴费  
        </header>
        <ul class="payment_content">
          <li>
@@ -41,41 +41,29 @@
        </div>
       <van-popup class="paymme" v-model="show">
         <van-icon @click="show=false" class="iconfo" name="close" />
-           <!--  <ul>
-              <li class="first">
+          
+              <ul>
+              
+              <li class="second" @click="wepy">
+                 <img  class="imgg" src="../assets/images/5182024.png" alt="">
+                <p >微信支付</p>
+              </li>
+              <li class="first"  @click="alipayment" >
                 <img src="../assets/images/20190925181856.png" alt="">
                 <p>支付宝支付</p>
 
-              </li>
-              <li class="second" @click="wepy">
-                 <img  class="imgg" src="../assets/images/5182024.png" alt="">
-                <p>微信支付</p>
-              </li>
-            </ul> -->
-             <ul>
-              <!-- <li class="first">
-                <img src="../assets/images/20190925181856.png" alt="">
-                <p>支付宝支付</p>
-
-              </li> -->
-              <li class="second" @click="wepy">
-                 <img  class="imgg" src="../assets/images/5182024.png" alt="">
-                <p>微信支付</p>
               </li>
             </ul>
       </van-popup>
-      <van-popup v-model="show1"> 
-      <ul class="uuu" style="text-align:center;">
-        <li>请确认微信支付是否已经完成</li>
-        <li @click="shuaxin" style="color:red;"> 已完成支付</li>
-        <li @click="shuaxin"> 支付遇到问题,重新支付</li>
-      </ul></van-popup>
+     
+     
   </div>
 </template>
 
 <script>
-import {orderdetail,weixinpay} from '@/api/paymentv'
-
+import {orderdetail,weixinpay,alipay} from '@/api/paymentv'
+import {storage} from '../utils/localstorage'
+import {go} from "@/utils/go"
 export default {
 
   data () {
@@ -89,14 +77,42 @@ export default {
       time_stamp:'',
       mweb_url:'',
       appId:'',
-      show1:false,
+      
       href:'',
       
     }
   },
 
   methods: {
-     
+    goto(){
+     // this.$router.push('/notes')
+     storage(3)
+      this.go('/notes')
+    
+      
+    },
+    go,
+   
+    alipayment(){
+      
+      let c={
+         token:this.$store.state.token,
+         order_no:this.order_num,
+         quit_url :this.$store.state.httphost+"/#/payment"+this.$route.params.id,
+         return_url:this.$store.state.httphost+"/#/success"+this.$route.params.id
+                  
+      }
+      alipay(c).then(res=>{
+        if(res.data.code==1){
+          console.log(res.data.data)
+          const div = document.createElement('div');
+           div.style.display="none";
+          div.innerHTML = (res.data.data);  //res.data是返回的表单
+         document.body.appendChild(div);
+          document.forms.alipaysubmit.submit();
+        }
+      })
+    },
      gotopay(){
        this.show = true;
      },
@@ -105,7 +121,7 @@ export default {
      },
      wepy(){
        
-       
+      storage(1)
   
        
          let cc ={
@@ -127,6 +143,9 @@ export default {
        window.location.href=this.mweb_url+"&redirect_url="+encodeURIComponent(this.$store.state.httphost+"/#/success"+this.$route.params.id)
    
        })
+       setTimeout(()=>{
+        this.show=false;
+       },300)
   
       
       
@@ -166,18 +185,7 @@ export default {
   },
 
  created () {
- // alert('进入create钩子函数')
-   
- //第一次进入页面刷新一次，仅一次
-　　//location.href.indexOf("#")获取当前页面地址并在其中查找"#"首次出现位置，找不到就是-1
-   /*  if(location.href.indexOf("#aaahhhhhhhhhmfhddxsaaf")==-1){
-　　//在当前页面地址加入"#"，使下次不再进入此判断
-    //alert('我是第一次进来')
-    
-    location.href=location.href+"#aaahhhhhhhhhmfhddxsaaf";
-    location.reload();
-    
-    } */
+ 
     const c={
       token:this.$store.state.token,
        order_id:this.$route.params.id
@@ -189,7 +197,7 @@ export default {
         
          this.$router.push('/success'+res.data.data.order_id )
         }
-         console.log(res)
+        // console.log(res)
          this.list=res.data.data;
       
       this.order_num=res.data.data.order_no
@@ -197,13 +205,10 @@ export default {
      
     })
   },
-  /* beforeDestroy(){///这个方案失败了,废弃掉
-    alert('组件销毁前调用执行')
-     if(location.href.indexOf("#aaahhhhhhhhhmfhddxsaaf")>-1){
-　　
-    alert('组件销毁前还原loction.href')
-    }
-  } */
+  destroyed(){
+    this.show=false;
+  }
+  
 }
 </script>
 
@@ -216,9 +221,9 @@ export default {
       .uuu {
         border-radius: 35px;
         li {
-          height: 70px;
+          height: 100px;
           width: 450px;
-          line-height: 70px;
+          line-height: 100px;
           border-bottom: 1px solid #ccc;
           
         }
@@ -276,28 +281,37 @@ export default {
         margin-top: 40px;
         width: 430px;
       height: 230px;
-        position: relative;
+       position: relative;
         li {
           border-radius:10px 10px 10px 10px;
-          float: left;
-          width: 100%;
+         float: left;
+        
+         
+           width: 50%;
           text-align: center;
           height: 260px;
           background: #fff;
           padding-top: 40px;
+       
+         
            P {
-              padding-top: 40px;
+              padding-top: 37px;
+              letter-spacing: 0.07em;
+              font-size: 28px;
+             
            }
         }
         .first {
           border-right: 1px solid #eee;
-           border-radius:10px 0px 0px 10px;
+           border-radius:0px 10px 10px 0px;
            img {
-             
-             width: 100px;
+            
+             width: 1.39rem;
            }
         }
         .second {
+          
+            border-radius:10px 0px 0px 10px;
           padding-top: 48px;
           p {
               padding-top: 48px;

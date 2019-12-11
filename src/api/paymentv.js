@@ -21,3 +21,11 @@ export async function weixinpay(data){
         data
     })
 }
+//支付宝接口
+export async function alipay(data){
+        return await service({
+            url:'/api/alipay/createwappay',
+            method:'post',
+            data
+        })
+}
